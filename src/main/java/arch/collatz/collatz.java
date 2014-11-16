@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-public class Collatz {
+public class collatz {
     public static void main(String[] args) {
         long start = System.nanoTime();
         int[] result = new int[100_000];

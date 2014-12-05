@@ -2,7 +2,12 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin:  'idea'
 
-sourceCompatibility = 1.8
+ext {
+    jdkLevel = 1.8
+    encoding = 'UTF-8'
+    gradleVersion = '2.1'
+}
+
 version = '1.0'
 
 repositories {
@@ -26,4 +31,41 @@ buildscript {
 }
 sourceSets {
     main.java.srcDirs += 'src/main/kotlin'
+}
+
+[compileJava, compileTestJava].each {
+    it.sourceCompatibility = jdkLevel
+    it.targetCompatibility = jdkLevel
+    it.options.encoding = encoding
+}
+
+idea {
+    project {
+        languageLevel = jdkLevel
+        ipr {
+            withXml {xml ->
+                // idea タスクでIDEAにgradleプロジェクトであると認識させる
+                def settings = xml.node.appendNode('component', [name: 'GradleSettings'])
+                        .appendNode('option', [name: 'linkedExternalProjectsSettings'])
+                        .appendNode('GradleProjectSettings')
+                ['distributionType' : 'DEFAULT_WRAPPED',
+                 'externalProjectPath' : '$PROJECT_DIR$',
+                 'gradleHome' : '$USER_HOME$/.gvm/gradle/' + gradleVersion].each {name, value ->
+                    settings.appendNode('option', [name: name, value: value])
+                }
+                settings.appendNode('option', [name : 'modules'])
+                        .appendNode('set')
+                        .appendNode('option', [value : '$PROJECT_DIR$'])
+
+                // VCSにGitを使っていると認識させる
+                def vcs = xml.node.component.find{it.@name == 'VcsDirectoryMappings'}.mapping
+                vcs.@vcs = 'Git'
+                vcs.@directory = "$projectDir"
+
+                // 成果物の出力先をoutに設定する
+                def out = xml.node.component.find{it.@name == 'ProjectRootManager'}.output
+                out.@url = 'file://$PROJECT_DIR$/out'
+            }
+        }
+    }
 }
